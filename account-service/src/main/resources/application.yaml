@@ -1,0 +1,38 @@
+server:
+  port: 8081 # Keeps its internal container port
+
+spring:
+  application:
+    name: account-service
+
+  datasource:
+    # PIVOT 1: Changed 'localhost' to the service name 'account-db' from docker-compose
+    url: jdbc:postgresql://account-db:5432/account_db
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  kafka:
+    # PIVOT 2: Changed 'localhost:9094' to the internal listener 'kafka:9092'
+    bootstrap-servers: kafka:9092
+    consumer:
+      group-id: account-service-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+logging:
+  level:
+    com.logicminers.banking: INFO
