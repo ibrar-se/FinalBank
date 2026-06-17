@@ -63,9 +63,6 @@ jobs:
           push: true
           tags: ibrar09/gateway-service:latest
 
-  # ==========================================
-  # CONTINUOUS DEPLOYMENT (CD) TO LOCAL K8S
-  # ==========================================
   deploy-to-local-cluster:
     needs: build-and-push-microservices
     runs-on: self-hosted
