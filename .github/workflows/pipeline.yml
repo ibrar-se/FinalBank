@@ -21,7 +21,6 @@ jobs:
           username: ibrar09
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Build & Push Account Service
       - name: 4. Build & Push Account Service
         uses: docker/build-push-action@v5
         with:
@@ -29,7 +28,6 @@ jobs:
           push: true
           tags: ibrar09/account-service:latest
 
-      # Build & Push Transaction Service
       - name: 5. Build & Push Transaction Service
         uses: docker/build-push-action@v5
         with:
@@ -37,7 +35,6 @@ jobs:
           push: true
           tags: ibrar09/transaction-service:latest
 
-      # Build & Push Beneficiary Service
       - name: 6. Build & Push Beneficiary Service
         uses: docker/build-push-action@v5
         with:
@@ -45,7 +42,6 @@ jobs:
           push: true
           tags: ibrar09/beneficiary-service:latest
 
-      # Build & Push Fraud Service
       - name: 7. Build & Push Fraud Service
         uses: docker/build-push-action@v5
         with:
@@ -53,7 +49,6 @@ jobs:
           push: true
           tags: ibrar09/fraud-service:latest
 
-      # Build & Push Ledger Service
       - name: 8. Build & Push Ledger Service
         uses: docker/build-push-action@v5
         with:
@@ -61,7 +56,6 @@ jobs:
           push: true
           tags: ibrar09/ledger-service:latest
 
-      # Build & Push Gateway Service
       - name: 9. Build & Push Gateway Service
         uses: docker/build-push-action@v5
         with:
@@ -69,37 +63,36 @@ jobs:
           push: true
           tags: ibrar09/gateway-service:latest
 
+  # ==========================================
+  # CONTINUOUS DEPLOYMENT (CD) TO LOCAL K8S
+  # ==========================================
+  deploy-to-local-cluster:
+    needs: build-and-push-microservices
+    runs-on: self-hosted
 
-    # ==========================================
-    # THE CD PIPELINE: DEPLOY TO KUBERNETES
-    # ==========================================
-    deploy-to-local-cluster:
-      needs: build-and-push-microservices # Waits for images to push successfully
-      runs-on: self-hosted # Forces GitHub to run this on YOUR local PC
+    steps:
+      - name: 1. Checkout K8s Manifests
+        uses: actions/checkout@v3
 
-      steps:
-        - name: 1. Checkout K8s Manifests
-          uses: actions/checkout@v3
+      - name: 2. Apply Database & Messaging Infrastructure
+        run: |
+          kubectl apply -f k8s/databases/account-db.yaml
+          kubectl apply -f k8s/databases/transaction-db.yaml
+          kubectl apply -f k8s/databases/remaining-dbs.yaml
+          kubectl apply -f k8s/messaging/kafka.yaml
 
-        - name: 2. Apply Database & Messaging Infrastructure
-          run: |
-            kubectl apply -f k8s/databases/account-db.yaml
-            kubectl apply -f k8s/databases/transaction-db.yaml
-            kubectl apply -f k8s/databases/remaining-dbs.yaml
-            kubectl apply -f k8s/messaging/kafka.yaml
+      - name: 3. Apply Microservices
+        run: |
+          kubectl apply -f k8s/services/account-service.yaml
+          kubectl apply -f k8s/services/transaction-service.yaml
+          kubectl apply -f k8s/services/remaining-services.yaml
+          kubectl apply -f k8s/services/gateway-service.yaml
 
-        - name: 3. Apply Microservices
-          run: |
-            kubectl apply -f k8s/services/account-service.yaml
-            kubectl apply -f k8s/services/transaction-service.yaml
-            kubectl apply -f k8s/services/remaining-services.yaml
-            kubectl apply -f k8s/services/gateway-service.yaml
-
-        - name: 4. Force Kubernetes to pull the new images
-          run: |
-            kubectl rollout restart deployment account-service-deployment -n banking-system
-            kubectl rollout restart deployment transaction-service-deployment -n banking-system
-            kubectl rollout restart deployment beneficiary-service-deployment -n banking-system
-            kubectl rollout restart deployment fraud-service-deployment -n banking-system
-            kubectl rollout restart deployment ledger-service-deployment -n banking-system
-            kubectl rollout restart deployment gateway-service-deployment -n banking-system
+      - name: 4. Force Kubernetes to pull the new images
+        run: |
+          kubectl rollout restart deployment account-service-deployment -n banking-system
+          kubectl rollout restart deployment transaction-service-deployment -n banking-system
+          kubectl rollout restart deployment beneficiary-service-deployment -n banking-system
+          kubectl rollout restart deployment fraud-service-deployment -n banking-system
+          kubectl rollout restart deployment ledger-service-deployment -n banking-system
+          kubectl rollout restart deployment gateway-service-deployment -n banking-system
