@@ -1,0 +1,69 @@
+name: Logic Miners Enterprise CI/CD
+
+# Trigger the pipeline automatically on a push to the main branch
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-push-microservices:
+    # GitHub will spin up a fresh Ubuntu Linux server just for this job
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout Workspace Code
+        uses: actions/checkout@v3
+
+      - name: 2. Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Build & Push Account Service
+      - name: 3. Build & Push Account Service
+        uses: docker/build-push-action@v4
+        with:
+          context: ./account-service
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/account-service:latest
+
+      # Build & Push Transaction Service
+      - name: 4. Build & Push Transaction Service
+        uses: docker/build-push-action@v4
+        with:
+          context: ./transaction-service
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/transaction-service:latest
+
+      # Build & Push Beneficiary Service
+      - name: 5. Build & Push Beneficiary Service
+        uses: docker/build-push-action@v4
+        with:
+          context: ./beneficiary-service
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/beneficiary-service:latest
+
+      # Build & Push Fraud Service
+      - name: 6. Build & Push Fraud Service
+        uses: docker/build-push-action@v4
+        with:
+          context: ./fraud-service
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/fraud-service:latest
+
+      # Build & Push Ledger Service
+      - name: 7. Build & Push Ledger Service
+        uses: docker/build-push-action@v4
+        with:
+          context: ./ledger-service
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/ledger-service:latest
+
+      # Build & Push Gateway Service
+      - name: 8. Build & Push Gateway Service
+        uses: docker/build-push-action@v4
+        with:
+          context: ./gateway-service
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/gateway-service:latest
