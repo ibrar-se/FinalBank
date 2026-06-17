@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: account-service-deployment
+  namespace: banking-system
+  labels:
+    app: account-service
+spec:
+  replicas: 2 # Kubernetes runs 2 copies simultaneously for high availability!
+  selector:
+    matchLabels:
+      app: account-service
+  template:
+    metadata:
+      labels:
+        app: account-service
+    spec:
+      containers:
+        - name: account-service
+          image: ibrar09/account-service:latest # Pulls your freshly built cloud image!
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8081
+          env:
+            # THE FIX: Updated to point to the correct 'kafka-service'
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka-service.banking-system.svc.cluster.local:9092"
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://account-db-service.banking-system.svc.cluster.local:5432/account_db"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "postgres"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "postgres"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: account-service
+  namespace: banking-system
+spec:
+  selector:
+    app: account-service
+  ports:
+    - protocol: TCP
+      port: 8081
+      targetPort: 8081

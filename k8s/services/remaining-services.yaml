@@ -1,0 +1,138 @@
+# ==========================================
+# 1. BENEFICIARY SERVICE (Port 8084)
+# ==========================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: beneficiary-service-deployment
+  namespace: banking-system
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: beneficiary-service
+  template:
+    metadata:
+      labels:
+        app: beneficiary-service
+    spec:
+      containers:
+        - name: beneficiary-service
+          image: ibrar09/beneficiary-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8084
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://beneficiary-db-service.banking-system.svc.cluster.local:5432/beneficiary_db"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "postgres"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "postgres"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: beneficiary-service
+  namespace: banking-system
+spec:
+  selector:
+    app: beneficiary-service
+  ports:
+    - protocol: TCP
+      port: 8084
+      targetPort: 8084
+---
+# ==========================================
+# 2. FRAUD SERVICE (Port 8086)
+# ==========================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fraud-service-deployment
+  namespace: banking-system
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: fraud-service
+  template:
+    metadata:
+      labels:
+        app: fraud-service
+    spec:
+      containers:
+        - name: fraud-service
+          image: ibrar09/fraud-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8086
+          env:
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka-service.banking-system.svc.cluster.local:9092"
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://fraud-db-service.banking-system.svc.cluster.local:5432/fraud_db"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "postgres"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "postgres"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fraud-service
+  namespace: banking-system
+spec:
+  selector:
+    app: fraud-service
+  ports:
+    - protocol: TCP
+      port: 8086
+      targetPort: 8086
+---
+# ==========================================
+# 3. LEDGER SERVICE (Port 8083)
+# ==========================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ledger-service-deployment
+  namespace: banking-system
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ledger-service
+  template:
+    metadata:
+      labels:
+        app: ledger-service
+    spec:
+      containers:
+        - name: ledger-service
+          image: ibrar09/ledger-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8083
+          env:
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka-service.banking-system.svc.cluster.local:9092"
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://ledger-db-service.banking-system.svc.cluster.local:5432/ledger_db"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "postgres"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "postgres"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ledger-service
+  namespace: banking-system
+spec:
+  selector:
+    app: ledger-service
+  ports:
+    - protocol: TCP
+      port: 8083
+      targetPort: 8083

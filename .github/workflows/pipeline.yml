@@ -68,3 +68,38 @@ jobs:
           context: ./gateway-service
           push: true
           tags: ibrar09/gateway-service:latest
+
+
+    # ==========================================
+    # THE CD PIPELINE: DEPLOY TO KUBERNETES
+    # ==========================================
+    deploy-to-local-cluster:
+      needs: build-and-push-microservices # Waits for images to push successfully
+      runs-on: self-hosted # Forces GitHub to run this on YOUR local PC
+
+      steps:
+        - name: 1. Checkout K8s Manifests
+          uses: actions/checkout@v3
+
+        - name: 2. Apply Database & Messaging Infrastructure
+          run: |
+            kubectl apply -f k8s/databases/account-db.yaml
+            kubectl apply -f k8s/databases/transaction-db.yaml
+            kubectl apply -f k8s/databases/remaining-dbs.yaml
+            kubectl apply -f k8s/messaging/kafka.yaml
+
+        - name: 3. Apply Microservices
+          run: |
+            kubectl apply -f k8s/services/account-service.yaml
+            kubectl apply -f k8s/services/transaction-service.yaml
+            kubectl apply -f k8s/services/remaining-services.yaml
+            kubectl apply -f k8s/services/gateway-service.yaml
+
+        - name: 4. Force Kubernetes to pull the new images
+          run: |
+            kubectl rollout restart deployment account-service-deployment -n banking-system
+            kubectl rollout restart deployment transaction-service-deployment -n banking-system
+            kubectl rollout restart deployment beneficiary-service-deployment -n banking-system
+            kubectl rollout restart deployment fraud-service-deployment -n banking-system
+            kubectl rollout restart deployment ledger-service-deployment -n banking-system
+            kubectl rollout restart deployment gateway-service-deployment -n banking-system

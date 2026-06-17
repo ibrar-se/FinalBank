@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transaction-db
+  namespace: banking-system
+  labels:
+    app: transaction-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: transaction-db
+  template:
+    metadata:
+      labels:
+        app: transaction-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: "transaction_db"
+            - name: POSTGRES_USER
+              value: "postgres"
+            - name: POSTGRES_PASSWORD
+              value: "postgres"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: transaction-db-service
+  namespace: banking-system
+spec:
+  selector:
+    app: transaction-db
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432

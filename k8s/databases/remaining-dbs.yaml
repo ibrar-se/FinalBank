@@ -1,0 +1,131 @@
+# ==========================================
+# 1. BENEFICIARY DATABASE
+# ==========================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: beneficiary-db
+  namespace: banking-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: beneficiary-db
+  template:
+    metadata:
+      labels:
+        app: beneficiary-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: "beneficiary_db"
+            - name: POSTGRES_USER
+              value: "postgres"
+            - name: POSTGRES_PASSWORD
+              value: "postgres"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: beneficiary-db-service
+  namespace: banking-system
+spec:
+  selector:
+    app: beneficiary-db
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+---
+# ==========================================
+# 2. FRAUD DATABASE
+# ==========================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fraud-db
+  namespace: banking-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fraud-db
+  template:
+    metadata:
+      labels:
+        app: fraud-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: "fraud_db"
+            - name: POSTGRES_USER
+              value: "postgres"
+            - name: POSTGRES_PASSWORD
+              value: "postgres"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fraud-db-service
+  namespace: banking-system
+spec:
+  selector:
+    app: fraud-db
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+---
+# ==========================================
+# 3. LEDGER DATABASE
+# ==========================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ledger-db
+  namespace: banking-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ledger-db
+  template:
+    metadata:
+      labels:
+        app: ledger-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: "ledger_db"
+            - name: POSTGRES_USER
+              value: "postgres"
+            - name: POSTGRES_PASSWORD
+              value: "postgres"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ledger-db-service
+  namespace: banking-system
+spec:
+  selector:
+    app: ledger-db
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432

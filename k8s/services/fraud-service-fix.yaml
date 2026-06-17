@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fraud-service-deployment
+  namespace: banking-system
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: fraud-service
+  template:
+    metadata:
+      labels:
+        app: fraud-service
+    spec:
+      containers:
+        - name: fraud-service
+          image: ibrar09/fraud-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8086
+          env:
+            # The Carpet Bomb: Injecting all possible Spring Kafka variable names
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka-service.banking-system.svc.cluster.local:9092"
+            - name: SPRING_KAFKA_CONSUMER_BOOTSTRAP_SERVERS
+              value: "kafka-service.banking-system.svc.cluster.local:9092"
+            - name: SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS
+              value: "kafka-service.banking-system.svc.cluster.local:9092"
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka-service.banking-system.svc.cluster.local:9092"
+            # Database Connections
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://fraud-db-service.banking-system.svc.cluster.local:5432/fraud_db"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "postgres"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "postgres"
