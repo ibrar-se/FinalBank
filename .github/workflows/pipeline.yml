@@ -12,6 +12,23 @@ jobs:
       - name: 1. Checkout Workspace Code
         uses: actions/checkout@v3
 
+      - name: 1.1. Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: 1.2. Build Microservices with Maven
+        run: |
+          cd auth-service && mvn clean package -DskipTests && cd ..
+          cd account-service && mvn clean package -DskipTests && cd ..
+          cd transaction-service && mvn clean package -DskipTests && cd ..
+          cd beneficiary-service && mvn clean package -DskipTests && cd ..
+          cd fraud-service && mvn clean package -DskipTests && cd ..
+          cd ledger-service && mvn clean package -DskipTests && cd ..
+          cd gateway-service && mvn clean package -DskipTests && cd ..
+
       - name: 2. Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -21,42 +38,50 @@ jobs:
           username: ibrar09
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: 4. Build & Push Account Service
+      # 🟢 ADDED: Auth Service Build & Push
+      - name: 4. Build & Push Auth Service
+        uses: docker/build-push-action@v5
+        with:
+          context: ./auth-service
+          push: true
+          tags: ibrar09/auth-service:latest
+
+      - name: 5. Build & Push Account Service
         uses: docker/build-push-action@v5
         with:
           context: ./account-service
           push: true
           tags: ibrar09/account-service:latest
 
-      - name: 5. Build & Push Transaction Service
+      - name: 6. Build & Push Transaction Service
         uses: docker/build-push-action@v5
         with:
           context: ./transaction-service
           push: true
           tags: ibrar09/transaction-service:latest
 
-      - name: 6. Build & Push Beneficiary Service
+      - name: 7. Build & Push Beneficiary Service
         uses: docker/build-push-action@v5
         with:
           context: ./beneficiary-service
           push: true
           tags: ibrar09/beneficiary-service:latest
 
-      - name: 7. Build & Push Fraud Service
+      - name: 8. Build & Push Fraud Service
         uses: docker/build-push-action@v5
         with:
           context: ./fraud-service
           push: true
           tags: ibrar09/fraud-service:latest
 
-      - name: 8. Build & Push Ledger Service
+      - name: 9. Build & Push Ledger Service
         uses: docker/build-push-action@v5
         with:
           context: ./ledger-service
           push: true
           tags: ibrar09/ledger-service:latest
 
-      - name: 9. Build & Push Gateway Service
+      - name: 10. Build & Push Gateway Service
         uses: docker/build-push-action@v5
         with:
           context: ./gateway-service
@@ -73,6 +98,7 @@ jobs:
 
       - name: 2. Apply Database & Messaging Infrastructure
         run: |
+          kubectl apply -f k8s/databases/auth-db.yaml
           kubectl apply -f k8s/databases/account-db.yaml
           kubectl apply -f k8s/databases/transaction-db.yaml
           kubectl apply -f k8s/databases/remaining-dbs.yaml
@@ -80,6 +106,7 @@ jobs:
 
       - name: 3. Apply Microservices
         run: |
+          kubectl apply -f k8s/services/auth-service.yaml
           kubectl apply -f k8s/services/account-service.yaml
           kubectl apply -f k8s/services/transaction-service.yaml
           kubectl apply -f k8s/services/remaining-services.yaml
@@ -87,6 +114,7 @@ jobs:
 
       - name: 4. Force Kubernetes to pull the new images
         run: |
+          kubectl rollout restart deployment auth-service-deployment -n banking-system
           kubectl rollout restart deployment account-service-deployment -n banking-system
           kubectl rollout restart deployment transaction-service-deployment -n banking-system
           kubectl rollout restart deployment beneficiary-service-deployment -n banking-system
