@@ -14,13 +14,12 @@ import org.springframework.stereotype.Component;
 public class AccountMessageListener {
 
     private final AccountService accountService;
-    private final KafkaTemplate<String, String> kafkaTemplate; // Changed to String
-    private final ObjectMapper objectMapper; // Added this field
+    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final ObjectMapper objectMapper;
 
     public AccountMessageListener(AccountService accountService, KafkaTemplate<String, String> kafkaTemplate) {
         this.accountService = accountService;
         this.kafkaTemplate = kafkaTemplate;
-        // Initialize the tool that converts JSON text to Java Objects
         this.objectMapper = new ObjectMapper()
                 .registerModule(new ParameterNamesModule())
                 .registerModule(new JavaTimeModule());
@@ -34,11 +33,11 @@ public class AccountMessageListener {
             // 1. Manually parse the JSON string
             TransactionEvent event = objectMapper.readValue(payload, TransactionEvent.class);
 
-            // 2. Business Logic
+            // 2. Business Logic - 🛑 NOW PASSING THE USER ID FROM THE EVENT!
             if ("DEBIT".equals(event.action())) {
-                accountService.debitAccount(event.accountNumber(), event.amount());
+                accountService.debitAccount(event.accountNumber(), event.amount(), event.userId());
             } else if ("CREDIT".equals(event.action())) {
-                accountService.creditAccount(event.accountNumber(), event.amount());
+                accountService.creditAccount(event.accountNumber(), event.amount(), event.userId());
             }
 
             // 3. Build the SUCCESS reply JSON as a String

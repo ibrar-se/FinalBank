@@ -1,0 +1,28 @@
+server:
+  port: 8087 # Running on 8087 so it doesn't crash into your other services
+
+spring:
+  application:
+    name: notification-service
+
+  # 1. The Kafka Ear
+  kafka:
+    bootstrap-servers: localhost:9094 # Using the external port so you can run this locally while Kafka is in Docker
+    consumer:
+      group-id: notification-group # This tells Kafka who is picking up the tickets
+      auto-offset-reset: earliest # If the service crashes, read from the oldest unread ticket
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+  # 2. The Gmail Cannon
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: YOUR_EMAIL@gmail.com # 🛑 Put your actual Gmail address here
+    password: YOUR_APP_PASSWORD # 🛑 Do NOT put your real password here (See Step 3)
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true

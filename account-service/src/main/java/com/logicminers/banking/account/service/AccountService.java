@@ -20,7 +20,7 @@ public class AccountService {
     private final AccountRepository accountRepository;
 
     /**
-     * Creates a new banking account with a zero balance.
+     * Creates a new banking account.
      */
     @Transactional
     public Account createAccount(String accountNumber, String userId, String currency) {
@@ -32,7 +32,7 @@ public class AccountService {
 
         Account newAccount = Account.builder()
                 .accountNumber(accountNumber)
-                .userId(userId) // Mocking IAM link for now
+                .userId(userId) // Now this comes securely from the Gateway context
                 .balance(BigDecimal.ZERO)
                 .currency(currency)
                 .status(AccountStatus.ACTIVE)
@@ -42,41 +42,40 @@ public class AccountService {
     }
 
     /**
-     * Fetches an account. Throws our custom 404 exception if missing.
+     * 🔒 SECURE: Fetches an account ONLY IF the user owns it.
      */
     @Transactional(readOnly = true)
-    public Account getAccount(String accountNumber) {
-        return accountRepository.findByAccountNumber(accountNumber)
-                .orElseThrow(() -> new ResourceNotFoundException("Account not found: " + accountNumber));
+    public Account getAccount(String accountNumber, String userId) {
+        // Enforcing Zero-Trust ownership at the database level
+        return accountRepository.findByAccountNumberAndUserId(accountNumber, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found or you do not have permission to access it."));
     }
 
     /**
-     * Deposits money.
+     * 🔒 SECURE: Deposits money.
      */
     @Transactional
-    public Account creditAccount(String accountNumber, BigDecimal amount) {
-        log.info("Crediting [{}] to account [{}]", amount, accountNumber);
+    public Account creditAccount(String accountNumber, BigDecimal amount, String userId) {
+        log.info("Crediting [{}] to account [{}] for user [{}]", amount, accountNumber, userId);
 
-        Account account = getAccount(accountNumber);
+        // Automatically fails if the user doesn't own the account
+        Account account = getAccount(accountNumber, userId);
 
-        // The Service doesn't do math. It delegates to the Domain Entity.
         account.credit(amount);
-
         return accountRepository.save(account);
     }
 
     /**
-     * Withdraws money.
+     * 🔒 SECURE: Withdraws money.
      */
     @Transactional
-    public Account debitAccount(String accountNumber, BigDecimal amount) {
-        log.info("Debiting [{}] from account [{}]", amount, accountNumber);
+    public Account debitAccount(String accountNumber, BigDecimal amount, String userId) {
+        log.info("Debiting [{}] from account [{}] for user [{}]", amount, accountNumber, userId);
 
-        Account account = getAccount(accountNumber);
+        // Automatically fails if the user doesn't own the account
+        Account account = getAccount(accountNumber, userId);
 
-        // The Service doesn't check if funds are sufficient. The Domain Entity does.
         account.debit(amount);
-
         return accountRepository.save(account);
     }
 }

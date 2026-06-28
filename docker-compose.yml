@@ -4,6 +4,32 @@ services:
   # ==========================================
   # 1. THE INFRASTRUCTURE LAYER (Databases & Message Broker)
   # ==========================================
+
+  # 🛑 THE SECURITY VAULT: Redis for JWT Blacklisting
+  logicminers-redis:
+    image: redis:7.0-alpine
+    container_name: logicminers-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - banking-network
+    restart: unless-stopped
+
+  auth-db:
+    image: postgres:15-alpine
+    container_name: logicminers-auth-db
+    ports:
+      - "5437:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: auth_db
+    restart: unless-stopped
+    volumes:
+      - auth_data:/var/lib/postgresql/data
+    networks:
+      - banking-network
+
   account-db:
     image: postgres:15-alpine
     container_name: logicminers-account-db
@@ -14,6 +40,8 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: account_db
     restart: unless-stopped
+    volumes:
+      - account_data:/var/lib/postgresql/data
     networks:
       - banking-network
 
@@ -27,6 +55,8 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: transaction_db
     restart: unless-stopped
+    volumes:
+      - transaction_data:/var/lib/postgresql/data
     networks:
       - banking-network
 
@@ -40,6 +70,8 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: beneficiary_db
     restart: unless-stopped
+    volumes:
+      - beneficiary_data:/var/lib/postgresql/data
     networks:
       - banking-network
 
@@ -53,6 +85,8 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: fraud_db
     restart: unless-stopped
+    volumes:
+      - fraud_data:/var/lib/postgresql/data
     networks:
       - banking-network
 
@@ -66,6 +100,8 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: ledger_db
     restart: unless-stopped
+    volumes:
+      - ledger_data:/var/lib/postgresql/data
     networks:
       - banking-network
 
@@ -86,6 +122,8 @@ services:
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     restart: unless-stopped
+    volumes:
+      - kafka_data:/var/lib/kafka/data
     networks:
       - banking-network
 
@@ -96,11 +134,25 @@ services:
     build: ./gateway-service
     container_name: gateway-service
     ports:
-      - "8090:8090"
+      - "8091:8090"
     depends_on:
+      - auth-service
       - account-service
       - transaction-service
       - beneficiary-service
+      - logicminers-redis # 🟢 ADDED: Gateway now waits for Redis
+    networks:
+      - banking-network
+
+  auth-service:
+    build: ./auth-service
+    container_name: auth-service
+    ports:
+      - "8085:8085"
+    depends_on:
+      - auth-db
+      - kafka
+      - logicminers-redis # 🟢 ADDED: Auth Service now waits for Redis
     networks:
       - banking-network
 
@@ -159,8 +211,17 @@ services:
       - banking-network
 
 # ==========================================
-# 3. VIRTUAL NETWORK
+# 3. VIRTUAL NETWORK & VOLUMES
 # ==========================================
 networks:
   banking-network:
     driver: bridge
+
+volumes:
+  auth_data:
+  account_data:
+  transaction_data:
+  beneficiary_data:
+  fraud_data:
+  ledger_data:
+  kafka_data:

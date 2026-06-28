@@ -3,6 +3,7 @@ package com.logicminers.banking.account.domain;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -36,6 +37,27 @@ import java.util.UUID;
     @Version
     @Column(nullable = false)
     private Long version; // Crucial for Optimistic Locking
+
+    private String nationalId;
+    private String kycLevel;
+    private String purposeOfAccount;
+
+    // Suggested addition to your entity
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 
     // --- Domain Business Logic Methods ---
 

@@ -4,6 +4,7 @@ import com.logicminers.banking.account.domain.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -21,4 +22,8 @@ public interface AccountRepository extends JpaRepository<Account, UUID> {
      * Used to prevent duplicate account creation.
      */
     boolean existsByAccountNumber(String accountNumber);
-}
+    // 🔒 SECURE: Find account by number AND owner ID
+    Optional<Account> findByAccountNumberAndUserId(String accountNumber, String userId);
+
+    // 🔒 SECURE: List all accounts belonging to the authenticated user
+    List<Account> findAllByUserId(String userId);}

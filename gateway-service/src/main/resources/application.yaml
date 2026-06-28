@@ -7,46 +7,65 @@ spring:
 
   cloud:
     gateway:
-      server:
-        webmvc:
-          routes:
-            - id: account-service
-              # PIVOT 1: Points to internal service name and container port 8081
-              uri: http://account-service:8081
-              predicates:
-                - Path=/api/v1/accounts/**
+      routes:
+        # 1. The Auth Service (The Front Door)
+        - id: auth-service
+          uri: http://auth-service:8085
+          predicates:
+            - Path=/api/v1/auth/**
+          # 🛑 THE MISSING PIECE: The Translator Filter!
 
-            - id: transaction-service
-              # PIVOT 2: Points to internal service name and container port 8082
-              uri: http://transaction-service:8082
-              predicates:
-                - Path=/api/v1/transactions/**
+        # 2. The Account Service (The Bank Vault)
+        - id: account-service
+          uri: http://account-service:8081
+          predicates:
+            - Path=/api/v1/accounts/**
 
-            - id: beneficiary-service
-              # PIVOT 3: Points to internal service name and container port 8084
-              uri: http://beneficiary-service:8084
-              predicates:
-                - Path=/api/beneficiaries/**
+        # 3. The Transaction Service (The Money Mover)
+        - id: transaction-service
+          uri: http://transaction-service:8082
+          predicates:
+            - Path=/api/v1/transactions/**
 
-          globalcors:
-            cors-configurations:
-              '[/**]':
-                allowedOrigins:
-                  - "http://localhost:3000" # Keep this as localhost for your React app
-                allowedMethods:
-                  - GET
-                  - POST
-                  - PUT
-                  - DELETE
-                  - OPTIONS
-                allowedHeaders:
-                  - "*"
-                allowCredentials: true
+        # 4. The Beneficiary Service
+        - id: beneficiary-service
+          uri: http://beneficiary-service:8084
+          predicates:
+            - Path=/api/beneficiaries/**
+
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:3000"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders:
+              - "*"
+            allowCredentials: true
 
 eureka:
   client:
     enabled: false
 
+data :
+  redis:
+    host: logicminers-redis
+    port: 6379
 logging:
   level:
-    org.springframework.cloud.gateway: INFO
+    org.springframework.cloud.gateway: TRACE
+    reactor.netty.http.server: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+jwt:
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970

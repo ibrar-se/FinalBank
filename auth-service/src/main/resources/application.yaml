@@ -1,0 +1,30 @@
+  server:
+    port: 8085
+
+  spring:
+    application:
+      name: auth-service
+
+    datasource:
+      url: jdbc:postgresql://auth-db:5432/auth_db
+      username: postgres
+      password: postgres
+      # 🛑 1. Explicitly declare the driver
+      driver-class-name: org.postgresql.Driver
+
+    jpa:
+      hibernate:
+        ddl-auto: update
+      show-sql: true
+      # 🛑 2. Hardcode the dialect so it never panics again
+      database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+    # --- NEW: Apache Kafka Configuration ---
+    kafka:
+      bootstrap-servers: kafka:9092
+      producer:
+        key-serializer: org.apache.kafka.common.serialization.StringSerializer
+        value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+  jwt:
+    secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
