@@ -20,7 +20,7 @@ spec:
           ports:
             - containerPort: 8086
           env:
-            # The Carpet Bomb: Injecting all possible Spring Kafka variable names
+            # 🟢 Kafka Connection Overrides
             - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
               value: "kafka-service.banking-system.svc.cluster.local:9092"
             - name: SPRING_KAFKA_CONSUMER_BOOTSTRAP_SERVERS
@@ -29,7 +29,7 @@ spec:
               value: "kafka-service.banking-system.svc.cluster.local:9092"
             - name: KAFKA_BOOTSTRAP_SERVERS
               value: "kafka-service.banking-system.svc.cluster.local:9092"
-            # Database Connections
+            # 🟢 Database Connections
             - name: SPRING_DATASOURCE_URL
               value: "jdbc:postgresql://fraud-db-service.banking-system.svc.cluster.local:5432/fraud_db"
             - name: SPRING_DATASOURCE_USERNAME
