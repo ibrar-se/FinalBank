@@ -3,8 +3,6 @@ kind: Deployment
 metadata:
   name: gateway-service-deployment
   namespace: banking-system
-  labels:
-    app: gateway-service
 spec:
   replicas: 1
   selector:
@@ -21,6 +19,14 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 8090
+          env:
+            # 🟢 Disabling Redis to prevent connection crashes
+            - name: spring.data.redis.repositories.enabled
+              value: "false"
+            - name: spring.cloud.gateway.redis-rate-limiter.enabled
+              value: "false"
+            - name: management.health.redis.enabled
+              value: "false"
 ---
 apiVersion: v1
 kind: Service
@@ -28,7 +34,7 @@ metadata:
   name: gateway-service
   namespace: banking-system
 spec:
-  type: LoadBalancer # This is the magic key that opens it to the outside world
+  type: LoadBalancer
   selector:
     app: gateway-service
   ports:
