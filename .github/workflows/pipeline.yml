@@ -98,6 +98,7 @@ jobs:
 
       - name: 2. Apply Database & Messaging Infrastructure
         run: |
+          kubectl create namespace banking-system --dry-run=client -o yaml | kubectl apply -f -
           kubectl apply -f k8s/databases/auth-db.yaml --validate=false
           kubectl apply -f k8s/databases/account-db.yaml --validate=false
           kubectl apply -f k8s/databases/transaction-db.yaml --validate=false
