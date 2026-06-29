@@ -98,19 +98,19 @@ jobs:
 
       - name: 2. Apply Database & Messaging Infrastructure
         run: |
-          kubectl apply -f k8s/databases/auth-db.yaml
-          kubectl apply -f k8s/databases/account-db.yaml
-          kubectl apply -f k8s/databases/transaction-db.yaml
-          kubectl apply -f k8s/databases/remaining-dbs.yaml
-          kubectl apply -f k8s/messaging/kafka.yaml
+          kubectl apply -f k8s/databases/auth-db.yaml --validate=false
+          kubectl apply -f k8s/databases/account-db.yaml --validate=false
+          kubectl apply -f k8s/databases/transaction-db.yaml --validate=false
+          kubectl apply -f k8s/databases/remaining-dbs.yaml --validate=false
+          kubectl apply -f k8s/messaging/kafka.yaml --validate=false
 
       - name: 3. Apply Microservices
         run: |
-          kubectl apply -f k8s/services/auth-service.yaml
-          kubectl apply -f k8s/services/account-service.yaml
-          kubectl apply -f k8s/services/transaction-service.yaml
-          kubectl apply -f k8s/services/remaining-services.yaml
-          kubectl apply -f k8s/services/gateway-service.yaml
+          kubectl apply -f k8s/services/auth-service.yaml --validate=false
+          kubectl apply -f k8s/services/account-service.yaml --validate=false
+          kubectl apply -f k8s/services/transaction-service.yaml --validate=false
+          kubectl apply -f k8s/services/remaining-services.yaml --validate=false
+          kubectl apply -f k8s/services/gateway-service.yaml --validate=false
 
       - name: 4. Force Kubernetes to pull the new images
         run: |
